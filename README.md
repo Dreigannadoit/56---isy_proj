@@ -6,10 +6,10 @@ A creative word association game where two players compete to find the best word
 
 - **AI-Powered Scoring**: Uses language models to evaluate word quality
 - **Multi-Criteria Evaluation**: Scores words based on:
-  -- **Commonality**: How rare/uncommon the word is
-  -- **Spelling Complexity**: Difficulty of spelling
-  -- **Prompt Compatibility**: How well the word matches the prompt
-  -- **Spelling Accuracy**: Penalty for misspelled words
+  - **Commonality**: How rare/uncommon the word is
+  - **Spelling Complexity**: Difficulty of spelling
+  - **Prompt Compatibility**: How well the word matches the prompt
+  - **Spelling Accuracy**: Penalty for misspelled words
 - **Tie-Breaker System**: AI-powered tie-breaking when scores are equal
 - **Interactive Gameplay**: Simple terminal-based interface
 - **Detailed Results**: Comprehensive scoring breakdown after each round
