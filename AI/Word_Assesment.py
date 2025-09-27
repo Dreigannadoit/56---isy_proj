@@ -14,7 +14,7 @@ class Word_Assesment:
 
         prompt = f"""
             Analyze the 2 words and rate its commonality in every English conversation. 
-            Consider how frequently an average elementary student from the ages 7 to 11 would use this words in everyday conversation.
+            Consider how frequently an average ELEMENTARY student from the AGES 7 to 11 would use this words in everyday conversation.
             
             Return ONLY a JSON object with this exact format
             {{"{word1}": score1, "{word2}": score2}}
@@ -23,16 +23,20 @@ class Word_Assesment:
             
             Use Word Commonality Scoring Scale (Ages 7–11)
 
-            10 – Universal: Used in almost every conversation. (e.g., I, you, yes, no, mom, dad, school)  
-            9 – Extremely Common: Very frequent in everyday talk. (e.g., friend, play, game, eat, teacher)  
-            8 – Very Common: Appears often in casual or school-related conversations. (e.g., book, movie, fun, house, run)  
-            7 – Common: Known and sometimes used, though not in every chat. (e.g., homework, pet, candy, music)  
-            6 – Fairly Common: Recognized by most kids but used only in certain contexts. (e.g., castle, balloon, brave, computer)  
-            5 – Moderately Common: Kids understand the word, but don’t say it often. (e.g., science, travel, concert, clever)  
-            4 – Less Common: Kids may know it but would need context to use it naturally. (e.g., enormous, invent, mystery, forest)  
-            3 – Rare: Recognized occasionally (through reading, shows, or class), but rarely used in their own speech. (e.g., galaxy, experiment, rescue, adventure)  
-            2 – Very Rare: Kids might understand if explained, but don’t use it conversationally. (e.g., democracy, microscope, ancient, universe)  
-            1 – Uncommon / Advanced: Almost never appears in everyday conversations of 7–11-year-olds. (e.g., hypothesis, algorithm, nostalgia, philosophy)
+            1 – Universal: Used in almost every conversation. (e.g., I, you, yes, no, mom, dad, school)  
+            2 – Extremely Common: Very frequent in everyday talk. (e.g., friend, play, game, eat, teacher)  
+            3 – Very Common: Appears often in casual or school-related conversations. (e.g., book, movie, fun, house, run)  
+            4 – Common: Known and sometimes used, though not in every chat. (e.g., homework, pet, candy, music)  
+            5 – Fairly Common: Recognized by most kids but used only in certain contexts. (e.g., castle, balloon, brave, computer)  
+            6 – Moderately Common: Kids understand the word, but don’t say it often. (e.g., science, travel, concert, clever)  
+            7 – Less Common: Kids may know it but would need context to use it naturally. (e.g., enormous, invent, mystery, forest)  
+            8 – Rare: Recognized occasionally (through reading, shows, or class), but rarely used in their own speech. (e.g., galaxy, experiment, rescue, adventure)  
+            9 – Very Rare: Kids might understand if explained, but don’t use it conversationally. (e.g., democracy, microscope, ancient, universe)  
+            10 – Uncommon / Advanced: Almost never appears in everyday conversations of 7–11-year-olds. (e.g., hypothesis, algorithm, nostalgia, philosophy)
+            
+            The Less common the word is used in conversations of ELEMENTARY student from the AGES 7 to 11 the better the word is. 
+            
+            IF WORD 1 AND WORD 2 HAS THE SAME SCORE then compare the two words and determine which word is less frequently used by an average ELEMENTARY student from the AGES 7 to 11 would use this words in everyday conversation. Then give that word an additional 1 point. 
             
             Words to analyze and score:
             "{word1}" and "{word2}"
@@ -44,8 +48,8 @@ class Word_Assesment:
             scores = json.loads(response)
 
             if word1 in scores and word2 in scores:
-                scores[word1] = max(1, min(10, float(scores[word1])))
-                scores[word2] = max(1, min(10, float(scores[word2])))
+                scores[word1] = max(1, min(11, float(scores[word1])))
+                scores[word2] = max(1, min(11, float(scores[word2])))
                 return scores
             else:
                 return {word1: 5.0, word2: 5.0}
@@ -180,9 +184,3 @@ class Word_Assesment:
             'player2_word': word2,
             'evaluation_result': evaluation
         }
-
-
-
-
-
-
