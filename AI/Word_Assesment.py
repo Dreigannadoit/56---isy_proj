@@ -7,7 +7,7 @@ class Word_Assesment:
     """Handles scoring for words based on various criteria"""
 
     def __init__(self, llm):
-        self.llm
+        self.llm = llm
 
     def score_word_commonality(self, word1: str, word2: str) -> Dict[str, float]:
         """Score word based on how common it is in elementary conversation"""
@@ -69,7 +69,7 @@ class Word_Assesment:
 
         return scores
 
-    def generate_prompt(llm, theme):
+    def generate_prompt(llm, theme: str):
         """Generate a prompt covering a certain theme for the word game"""
 
         print("Generating prompt...")
@@ -124,9 +124,34 @@ class Word_Assesment:
         print(result)
 
 
-    def start_new_game(llm):
+    def start_new_game(self, llm):
         """Start a new game"""
-        print("\n" +  "Loading..." * 40)
+        print("\n" +  "*" * 40)
+        print("START NEW GAME")
+        print("\n" + "*" * 40)
+
+        # Generate Prompt
+        prompt = self.generate_prompt(llm, "")
+        print(f"\nPrompt: {prompt}\n")
+
+        # get player inputs
+        word1 = self.get_player_input(1)
+        word2 = self.get_player_input(2)
+
+        # evaluate words
+        evaluation = self.evaluate_words(llm, prompt, word1, word2)
+
+        # display results
+        self.display_result(evaluation)
+
+        return {
+            'prompt': prompt,
+            'player1_word': word1,
+            'player2_word': word2,
+            'evaluation_result': evaluation
+        }
+
+
 
 
 

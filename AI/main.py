@@ -34,7 +34,7 @@ class Main:
                 break
             elif choice == "1":
                 try:
-                    Word_Assesment().start_new_game(llm)
+                    Word_Assesment(llm).start_new_game(llm)
                 except Exception as e:
                     print(f"Error when starting game: {e}")
             else:
