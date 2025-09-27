@@ -2,7 +2,7 @@ from langchain.chat_models import init_chat_model
 
 from Word_Assesment import Word_Assesment
 
-CHAT_MODEL = "qwen3:4b"
+CHAT_MODEL = "qwen3:0.6b"
 
 class Main:
     def __init__(self):
