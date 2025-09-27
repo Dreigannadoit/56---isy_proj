@@ -1,12 +1,13 @@
-import os
-import json
-from typing import Dict, Any, Tuple
 from langchain.chat_models import init_chat_model
 
 CHAT_MODEL = "qwen3:4b"
 
-class Word_Assesment:
-    """Handles scoring for words based on various criteria"""
+class Main:
+    def __init__(self):
+        pass
 
-    def __init__(self, llm):
-        self.llm
+    def play_game(self):
+        print("Hello, World!")
+
+if __name__ == "__main__":
+    Main().play_game()
