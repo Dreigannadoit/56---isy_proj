@@ -79,8 +79,8 @@ class Word_Assesment:
         scores = {
             'commonality': commonality_scores,
             'total': {
-                word1: commonality_scores.get[word1, 0.0],
-                word2: commonality_scores.get[word2, 0.0],
+                word1: commonality_scores.get(word1, 0.0),
+                word2: commonality_scores.get(word2, 0.0),
             }
         }
 
@@ -146,7 +146,7 @@ class Word_Assesment:
             'player2_score': player2_score,
         }
 
-    def display_result(evaluation_result: dict):
+    def display_result(self, evaluation_result: dict):
         """Display the winner"""
 
         result = evaluation_result['player_scores']
