@@ -12,11 +12,11 @@ The player with the **highest total score** wins!
 ---
 
 ## Features
-- 🎮 Multiplayer support (2–5 players).  
-- 🤖 LLM-powered evaluation using [LangChain](https://www.langchain.com/) and [Ollama](https://ollama.ai/).  
-- 📝 Scoring based on **word commonality, spelling difficulty, and prompt fit**.  
-- 🔄 Tie-breaking logic (customizable).  
-- 🧑‍🏫 Fun and educational for kids and learners.  
+- Multiplayer support (2–5 players).  
+- LLM-powered evaluation using [LangChain](https://www.langchain.com/) and [Ollama](https://ollama.ai/).  
+- Scoring based on **word commonality, spelling difficulty, and prompt fit**.  
+- Tie-breaking logic (customizable).  
+- Fun and educational for kids and learners.  
 
 ---
 
