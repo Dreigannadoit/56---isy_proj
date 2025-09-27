@@ -13,31 +13,29 @@ class Word_Assesment:
         """Score word based on how common it is in elementary conversation"""
 
         prompt = f"""
-            Analyze the 2 words and rate its commonality in every English conversation. 
+            Analyze the 2 words and rate its commonality in everyday English conversation among Elementary students from the Ages 7 to 11. 
             Consider how frequently an average ELEMENTARY student from the AGES 7 to 11 would use this words in everyday conversation.
-            
+
+            Words to analyze and score: "{word1}" and "{word2}"
+
             Return ONLY a JSON object with this exact format
-            {{"{word1}": score1, "{word2}": score2}}
-            
-            Where score1 and score2 are the scores of word1 and word2 and are scored from 1-10. Use Word Commonality Scoring Scale.
-            
-            Use Word Commonality Scoring Scale (Ages 7–11)
+            {{"word1_score": score1, "word2_score": score2}}
+
+            Where score1 is for "{word1}" and score2 is for "{word2}", scored from 1-10 using this scale:
 
             1 – Universal: Used in almost every conversation. (e.g., I, you, yes, no, mom, dad, school)  
             2 – Extremely Common: Very frequent in everyday talk. (e.g., friend, play, game, eat, teacher)  
             3 – Very Common: Appears often in casual or school-related conversations. (e.g., book, movie, fun, house, run)  
             4 – Common: Known and sometimes used, though not in every chat. (e.g., homework, pet, candy, music)  
             5 – Fairly Common: Recognized by most kids but used only in certain contexts. (e.g., castle, balloon, brave, computer)  
-            6 – Moderately Common: Kids understand the word, but don’t say it often. (e.g., science, travel, concert, clever)  
+            6 – Moderately Common: Kids understand the word, but don't say it often. (e.g., science, travel, concert, clever)  
             7 – Less Common: Kids may know it but would need context to use it naturally. (e.g., enormous, invent, mystery, forest)  
             8 – Rare: Recognized occasionally (through reading, shows, or class), but rarely used in their own speech. (e.g., galaxy, experiment, rescue, adventure)  
-            9 – Very Rare: Kids might understand if explained, but don’t use it conversationally. (e.g., democracy, microscope, ancient, universe)  
+            9 – Very Rare: Kids might understand if explained, but don't use it conversationally. (e.g., democracy, microscope, ancient, universe)  
             10 – Uncommon / Advanced: Almost never appears in everyday conversations of 7–11-year-olds. (e.g., hypothesis, algorithm, nostalgia, philosophy)
-            
-            The Less common the word is used in conversations of ELEMENTARY student from the AGES 7 to 11 the better the word is.  
-            
-            Words to analyze and score:
-            "{word1}" and "{word2}"
+
+            Higher scores mean the word is LESS common (better for the game).
+
         """
 
         response = self.llm.invoke(prompt).content.strip()
@@ -46,48 +44,25 @@ class Word_Assesment:
         try:
             scores = json.loads(response)
 
-            if word1 in scores and word2 in scores:
+            word1_score = scores.get("word1_score") or scores.get("score1") or scores.get(word1) or scores.get(
+                word1.lower()) or scores.get(word1.upper())
+            word2_score = scores.get("word2_score") or scores.get("score2") or scores.get(word2) or scores.get(
+                word2.lower()) or scores.get(word2.upper())
+
+            if word1_score is not None and word2_score is not None:
                 print("conversion of commonality prompt to float value")
 
-                scores[word1] = max(1, min(10, float(scores[word1])))
-                scores[word2] = max(1, min(10, float(scores[word2])))
+                word1_score_float = max(1, min(10, float(word1_score)))
+                word2_score_float = max(1, min(10, float(word2_score)))
 
-                if scores[word1] == scores[word2]:
-                    print(f"score of {word1} and {word2} are equal in commonality")
-                    tie_prompt = f"""
-                        Between the words "{word1}" and "{word2}, which is LESS commonly used by ELEMENTARY student from the AGES 7 to 11 in everyday conversatio?
-                        
-                        Return ONLY a JSON object with this exact format:
-                        {{"less_common_word" : "word"}}
-                        
-                        Chose only one word: "{word1}" or "{word2}"
-                    """
+                result = {word1: word1_score_float, word2: word2_score_float}
 
-                    tie_response = self.llm.invoke(tie_prompt).content.strip()
-                    print(f"Tie-breaker LLM response: {tie_response}")
-
-                    try:
-                        tie_data = json.loads(tie_response)
-                        less_common_word = tie_data.get("less_common_word", "").strip()
-
-                        if less_common_word == word1:
-                            scores[word1] += 1
-                            print(f"Tie broken {word1} is less common")
-                        elif less_common_word == word2:
-                            scores[word2] += 1
-                            print(f"Tie broken {word2} is less common")
-                        else:
-                            print(f"Tie-breaker failed")
-                    except (json.decoder.JSONDecodeError, KeyError, ValueError) as e:
-                        print(f"Tie-breaker JSON error: {e}")
-
-                return scores
+                return result
             else:
-                print("Was not able see words in scores")
+                print("Was not able to extract scores from response")
                 return {word1: 5.0, word2: 5.0}
         except (json.decoder.JSONDecodeError, KeyError, ValueError) as e:
             print(f"Error while parsing response for commonality prompt: {e}")
-
             return {word1: 5.0, word2: 5.0}
 
     def score_spelling_complexity(self, word1: str, word2: str) -> Dict[str, float]:
