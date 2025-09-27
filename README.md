@@ -58,7 +58,6 @@ python main.py
 You’ll see a menu:
 
 ```vbnet
-Copy code
 Welcome to The Notebook
 
 Options:
