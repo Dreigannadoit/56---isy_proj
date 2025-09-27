@@ -38,8 +38,8 @@ The player with the **highest total score** wins!
 2. Create a virtual environment (recommended)
   ```bash
   python -m venv .venv
-  source .venv/bin/activate   # On Linux/Mac
-  .venv\Scripts\activate      # On Windows
+  source .venv/bin/activate   
+  .venv\Scripts\activate      
   ```
 3. Install dependencies
   ```bash
@@ -139,15 +139,3 @@ MIT License – feel free to use and modify.
 - Persistent leaderboard
 - Advanced tie-breaking
 - More scoring dimensions (e.g., creativity)
-
-
-
-
-
-
-
-
-
-
-
-ChatGPT can make mistakes.
