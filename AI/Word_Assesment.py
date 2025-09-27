@@ -34,26 +34,60 @@ class Word_Assesment:
             9 – Very Rare: Kids might understand if explained, but don’t use it conversationally. (e.g., democracy, microscope, ancient, universe)  
             10 – Uncommon / Advanced: Almost never appears in everyday conversations of 7–11-year-olds. (e.g., hypothesis, algorithm, nostalgia, philosophy)
             
-            The Less common the word is used in conversations of ELEMENTARY student from the AGES 7 to 11 the better the word is. 
-            
-            IF WORD 1 AND WORD 2 HAS THE SAME SCORE then compare the two words and determine which word is less frequently used by an average ELEMENTARY student from the AGES 7 to 11 would use this words in everyday conversation. Then give that word an additional 1 point. 
+            The Less common the word is used in conversations of ELEMENTARY student from the AGES 7 to 11 the better the word is.  
             
             Words to analyze and score:
             "{word1}" and "{word2}"
         """
 
         response = self.llm.invoke(prompt).content.strip()
+        print(f"LLM response: {response}")
 
         try:
             scores = json.loads(response)
 
             if word1 in scores and word2 in scores:
-                scores[word1] = max(1, min(11, float(scores[word1])))
-                scores[word2] = max(1, min(11, float(scores[word2])))
+                print("conversion of commonality prompt to float value")
+
+                scores[word1] = max(1, min(10, float(scores[word1])))
+                scores[word2] = max(1, min(10, float(scores[word2])))
+
+                if scores[word1] == scores[word2]:
+                    print(f"score of {word1} and {word2} are equal in commonality")
+                    tie_prompt = f"""
+                        Between the words "{word1}" and "{word2}, which is LESS commonly used by ELEMENTARY student from the AGES 7 to 11 in everyday conversatio?
+                        
+                        Return ONLY a JSON object with this exact format:
+                        {{"less_common_word" : "word"}}
+                        
+                        Chose only one word: "{word1}" or "{word2}"
+                    """
+
+                    tie_response = self.llm.invoke(tie_prompt).content.strip()
+                    print(f"Tie-breaker LLM response: {tie_response}")
+
+                    try:
+                        tie_data = json.loads(tie_response)
+                        less_common_word = tie_data.get("less_common_word", "").strip()
+
+                        if less_common_word == word1:
+                            scores[word1] += 1
+                            print(f"Tie broken {word1} is less common")
+                        elif less_common_word == word2:
+                            scores[word2] += 1
+                            print(f"Tie broken {word2} is less common")
+                        else:
+                            print(f"Tie-breaker failed")
+                    except (json.decoder.JSONDecodeError, KeyError, ValueError) as e:
+                        print(f"Tie-breaker JSON error: {e}")
+
                 return scores
             else:
+                print("Was not able see words in scores")
                 return {word1: 5.0, word2: 5.0}
-        except (json.decoder.JSONDecodeError, KeyError, ValueError):
+        except (json.decoder.JSONDecodeError, KeyError, ValueError) as e:
+            print(f"Error while parsing response for commonality prompt: {e}")
+
             return {word1: 5.0, word2: 5.0}
 
     def score_spelling_complexity(self, word1: str, word2: str) -> Dict[str, float]:
@@ -78,6 +112,8 @@ class Word_Assesment:
     def calculate_total_score(self, word1: str, word2: str, prompt: str) -> Dict[str, Any]:
         isSpellingCorrect = self.check_spelling(word1, word2)
 
+        print("Starting Calculation")
+        print("Getting commonality score")
         commonality_scores = self.score_word_commonality(word1, word2)
 
         scores = {
@@ -97,7 +133,8 @@ class Word_Assesment:
 
         prompt = f"""
         Create a SINGLE, clear prompt for a word association game following the theme "{theme}". The prompt should describe a concept that can be represented by multiple words. 
-        Make sure that the prompt does not describe a particular word. 
+        Make sure that the prompt does not describe a particular word.
+        DO NOT GIVE MORE THAN 1 (ONE) PROMPT
         
         Example format: 
 
@@ -162,7 +199,7 @@ class Word_Assesment:
         """Start a new game"""
         print("\n" +  "*" * 40)
         print("START NEW GAME")
-        print("\n" + "*" * 40)
+        print("*" * 40)
 
         # Generate Prompt
         prompt = self.generate_prompt(llm, "")
