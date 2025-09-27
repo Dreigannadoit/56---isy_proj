@@ -15,9 +15,13 @@ class Word_Assesment:
         prompt = f"""
             Analyze the 2 words and rate its commonality in every English conversation. 
             Consider how frequently an average elementary student from the ages 7 to 11 would use this words in everyday conversation.
-            Use the Scoring scale to compare the 2 words.
             
-            Word Commonality Scoring Scale (Ages 7–11)
+            Return ONLY a JSON object with this exact format
+            {{"{word1}": score1, "{word2}": score2}}
+            
+            Where score1 and score2 are the scores of word1 and word2 and are scored from 1-10. Use Word Commonality Scoring Scale.
+            
+            Use Word Commonality Scoring Scale (Ages 7–11)
 
             10 – Universal: Used in almost every conversation. (e.g., I, you, yes, no, mom, dad, school)  
             9 – Extremely Common: Very frequent in everyday talk. (e.g., friend, play, game, eat, teacher)  
@@ -30,14 +34,23 @@ class Word_Assesment:
             2 – Very Rare: Kids might understand if explained, but don’t use it conversationally. (e.g., democracy, microscope, ancient, universe)  
             1 – Uncommon / Advanced: Almost never appears in everyday conversations of 7–11-year-olds. (e.g., hypothesis, algorithm, nostalgia, philosophy)
             
-            Return only the 2 words and their respected score value
+            Words to analyze and score:
+            "{word1}" and "{word2}"
         """
 
         response = self.llm.invoke(prompt).content.strip()
+
         try:
-            scores = dict(response)
-        except:
-            return
+            scores = json.loads(response)
+
+            if word1 in scores and word2 in scores:
+                scores[word1] = max(1, min(10, float(scores[word1])))
+                scores[word2] = max(1, min(10, float(scores[word2])))
+                return scores
+            else:
+                return {word1: 5.0, word2: 5.0}
+        except (json.decoder.JSONDecodeError, KeyError, ValueError):
+            return {word1: 5.0, word2: 5.0}
 
     def score_spelling_complexity(self, word1: str, word2: str) -> Dict[str, float]:
         """Score word based on how spelling complexity"""
@@ -56,18 +69,20 @@ class Word_Assesment:
         return "correct" in response
 
     def break_tie(self, prompt: str, word1: str, word2: str) -> Tuple[str, str]:
-        return prompt, word1, word2
+        return
 
     def calculate_total_score(self, word1: str, word2: str, prompt: str) -> Dict[str, Any]:
         isSpellingCorrect = self.check_spelling(word1, word2)
 
-        scores = {
-            'commonality': self.score_word_commonality(word1, word2)
-        }
+        commonality_scores = self.score_word_commonality(word1, word2)
 
-        scores['total'] = (
-            scores['commonality']
-        )
+        scores = {
+            'commonality': commonality_scores,
+            'total': {
+                word1: commonality_scores.get[word1, 0.0],
+                word2: commonality_scores.get[word2, 0.0],
+            }
+        }
 
         return scores
 
@@ -77,7 +92,7 @@ class Word_Assesment:
         print("Generating prompt...")
 
         prompt = f"""
-        Create a single, clear prompt for a word association game following the theme "{theme}". The prompt should describe a concept that can be represented by multiple words. 
+        Create a SINGLE, clear prompt for a word association game following the theme "{theme}". The prompt should describe a concept that can be represented by multiple words. 
         Make sure that the prompt does not describe a particular word. 
         
         Example format: 
@@ -114,8 +129,21 @@ class Word_Assesment:
         print("\nScoring Player's Words")
         scores = scorer.calculate_total_score(word1, word2, prompt)
 
+        player1_score = scores['total'].get(word1, 0)
+        player2_score = scores['total'].get(word2, 0)
+
+        if player1_score > player2_score:
+            winner = "Player 1"
+        elif player1_score < player2_score:
+            winner = "Player 2"
+        else:
+            winner = "Tie"
+
         return {
-            'player_scores': scores
+            'player_scores': scores,
+            'winner': winner,
+            'player1_score': player1_score,
+            'player2_score': player2_score,
         }
 
     def display_result(evaluation_result: dict):
