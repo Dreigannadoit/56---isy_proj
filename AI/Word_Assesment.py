@@ -33,9 +33,11 @@ class Word_Assesment:
             Return only the 2 words and their respected score value
         """
 
-        response = self.llm.invoke(prompt.content.strip())
-
-        return 0.0
+        response = self.llm.invoke(prompt).content.strip()
+        try:
+            scores = dict(response)
+        except:
+            return
 
     def score_spelling_complexity(self, word1: str, word2: str) -> Dict[str, float]:
         """Score word based on how spelling complexity"""
@@ -103,7 +105,7 @@ class Word_Assesment:
     def evaluate_words(self, llm, prompt: str, word1: str, word2: str):
         """Evaluate both words and determine the winner"""
         print("Evaluating words...")
-        print(f"Prompt: {prompt}")
+        # print(f"Prompt: {prompt}")
         print(f"Player 1: {word1}")
         print(f"Player 2: {word2}")
 
