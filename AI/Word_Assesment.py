@@ -69,7 +69,7 @@ class Word_Assesment:
 
         return scores
 
-    def generate_prompt(llm, theme: str):
+    def generate_prompt(self, llm, theme: str):
         """Generate a prompt covering a certain theme for the word game"""
 
         print("Generating prompt...")
@@ -94,13 +94,13 @@ class Word_Assesment:
         return response
 
 
-    def get_player_input(player_num: int):
+    def get_player_input(self, player_num: int):
         """Get word input from a player via terminal"""
         word = input(f"Player {player_num}, enter a word: ").strip()
 
         return word
 
-    def evaluate_words(llm, prompt: str, word1: str, word2: str):
+    def evaluate_words(self, llm, prompt: str, word1: str, word2: str):
         """Evaluate both words and determine the winner"""
         print("Evaluating words...")
         print(f"Prompt: {prompt}")
