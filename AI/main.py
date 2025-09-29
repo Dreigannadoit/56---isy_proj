@@ -34,11 +34,11 @@ class Main:
                 break
             elif choice == "1":
                 try:
-                    Word_Assesment(llm).start_new_game(llm)
+                    Word_Assesment(llm).start_new_game(llm, theme = "")
                 except Exception as e:
                     print(f"Error when starting game: {e}")
             else:
-                print("Nuh UH.")
+                print("\n Nuh UH.")
 
 
 if __name__ == "__main__":
