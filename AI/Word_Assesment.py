@@ -1,5 +1,6 @@
 import os
 import json
+import re
 from typing import Dict, Any, Tuple, List
 
 
@@ -8,6 +9,15 @@ class Word_Assesment:
 
     def __init__(self, llm):
         self.llm = llm
+
+    def clean_json_response(self, response: str) -> str:
+        """Clean JSON response by removing markdown code blocks and extra text"""
+        # Remove ```json and ``` markers
+        cleaned = re.sub(r'```json\s*|\s*```', '', response).strip()
+        # Remove any other non-JSON text before or after
+        if cleaned.startswith('json'):
+            cleaned = cleaned[4:].strip()
+        return cleaned
 
 
     def prompt_template(self, llm, playerId: int, prompt: str, operationName: str) -> Dict[str, Any]:
@@ -18,7 +28,9 @@ class Word_Assesment:
         print(f"LLM response: {final_response}")
 
         try:
-            scores = json.loads(final_response)
+            # Clean the JSON response
+            cleaned_response = self.clean_json_response(final_response)
+            scores = json.loads(cleaned_response)
             print(f"Parsed Scores: {scores}")
 
             # Validate the response structure
@@ -62,7 +74,9 @@ class Word_Assesment:
             Higher scores mean the word is LESS common (better for the game).
         """
 
-        result = self.prompt_template(playerId = playerId, prompt = prompt, operationName = "Word Commonality")
+        result = self.prompt_template(llm, playerId = playerId, prompt = prompt, operationName = "Word Commonality")
+
+        return result
 
 
     def score_spelling_complexity(self, llm, word: str, playerId: int) -> Dict[str, Any]:
@@ -92,27 +106,9 @@ class Word_Assesment:
             Higher scores mean the word is HARDER to spell (better for the game).
             """
 
-        response = self.llm.invoke(prompt).content.strip()
+        result = self.prompt_template(llm, playerId=playerId, prompt=prompt, operationName="Word Spelling Complexity")
 
-        # Clean up the response
-        final_response = response.split('</think>')[-1].strip()
-        print(f"LLM response: {final_response}")
-
-        try:
-            scores = json.loads(final_response)
-            print(f"Parsed Scores: {scores}")
-
-            # Validate the response structure
-            if 'id' in scores and 'score' in scores:
-                return scores
-            else:
-                print("Invalid JSON structure, using default score")
-                return {'id': playerId, 'score': 5.0}
-
-        except (json.JSONDecodeError, KeyError, ValueError) as e:
-            print(f"Error while parsing response for spelling complexity prompt: {e}")
-            print(f"Response Failed: {final_response}")
-            return {'id': playerId, 'score': 5.0}
+        return result
 
 
     def score_prompt_compatibility(self, llm, word: str, playerId: int, prompt: str) -> Dict[str, Any]:
@@ -140,34 +136,119 @@ class Word_Assesment:
         Higher scores mean the word is very closely related to the prompt.
         """
 
-        response = self.llm.invoke(prompt).content.strip()
+        result = self.prompt_template(llm, playerId=playerId, prompt=prompt, operationName="Word Prompt Compatibility")
 
-        # Clean up the response
-        final_response = response.split('</think>')[-1].strip()
-        print(f"LLM response: {final_response}")
+        return result
 
-        try:
-            scores = json.loads(final_response)
-            print(f"Parsed Scores: {scores}")
 
-            # Validate the response structure
-            if 'id' in scores and 'score' in scores:
-                return scores
-            else:
-                print("Invalid JSON structure, using default score")
-                return {'id': playerId, 'score': 5.0}
+    def score_combined_rating(self, llm, word: str, playerId: int, prompt: str) -> Dict[str, Any]:
+        prompt = f"""
+                PROMPT: "{prompt}"
+                WORD TO EVALUATE: "{word}"
+                
+                
+                
+                Getting Commonality score:
+                Analyze the word and rate its commonality in everyday English conversation among Elementary students from the Ages 7 to 11. 
+                Consider how frequently an average ELEMENTARY student from the AGES 7 to 11 would use this word in everyday conversation.
+    
+                Word to analyze and score: "{word}"
+    
+                Where id is the player ID and score is the player score, scored from 1-10 using this scale:
+    
+                1 – Universal: Used in almost every conversation. (e.g., I, you, yes, no, mom, dad, school)  
+                2 – Extremely Common: Very frequent in everyday talk. (e.g., friend, play, game, eat, teacher)  
+                3 – Very Common: Appears often in casual or school-related conversations. (e.g., book, movie, fun, house, run)  
+                4 – Common: Known and sometimes used, though not in every chat. (e.g., homework, pet, candy, music)  
+                5 – Fairly Common: Recognized by most kids but used only in certain contexts. (e.g., castle, balloon, brave, computer)  
+                6 – Moderately Common: Kids understand the word, but don't say it often. (e.g., science, travel, concert, clever)  
+                7 – Less Common: Kids may know it but would need context to use it naturally. (e.g., enormous, invent, mystery, forest)  
+                8 – Rare: Recognized occasionally (through reading, shows, or class), but rarely used in their own speech. (e.g., galaxy, experiment, rescue, adventure)  
+                9 – Very Rare: Kids might understand if explained, but don't use it conversationally. (e.g., democracy, microscope, ancient, universe)  
+                10 – Uncommon / Advanced: Almost never appears in everyday conversations of 7–11-year-olds. (e.g., hypothesis, algorithm, nostalgia, philosophy)
+    
+                Higher scores mean the word is LESS common (better for the game).
+                
+                Assign the rating as commonality_score.
+                
+                
+                
+                Getting Complexity score:
+                Analyze the spelling complexity of the word "{word}". Consider:
+                - Unusual letter combinations
+                - Silent letters
+                - Double letters
+                - Exceptions to common spelling rules
+                - Overall predictability of spelling
+                    
+                Word to analyze and score: "{word}"
+                
+                Where id is the player ID and score is the player score, scored from 1-7 using this scale:
+            
+                Scoring scale:
+                1-2: Very simple (cat, dog, run)
+                3-4: Simple (happy, water, table)
+                5-6: Moderate (receive, necessary, rhythm)
+                7 : Complex (conscience, questionnaire, bureaucracy)
+                    
+                Higher scores mean the word is HARDER to spell (better for the game).
+                
+                Assign the rating as complexity_score.
+                
+                
+                
+                Getting Compatability score:
+                How perfectly does this word capture the essence of the prompt?
 
-        except (json.JSONDecodeError, KeyError, ValueError) as e:
-            print(f"Error while parsing response for spelling prompt compatability prompt: {e}")
-            print(f"Response Failed: {final_response}")
-            return {'id': playerId, 'score': 5.0}
+                Word to analyze and score: "{word}"
 
+                Where id is the player ID and score is the player score, scored from 1-15 using this scale:
+                1-3: Poor match (tangentially related at best)
+                4-7: Fair match (somewhat related but not ideal)
+                8-11: Good match (clearly related and appropriate)
+                12-15: Excellent match (perfectly captures the prompt's meaning)
+
+                Consider: specificity, relevance, and how well it embodies the concept.
+
+                Higher scores mean the word is very closely related to the prompt.
+                
+                Assign the rating as compatability_score.
+                
+                
+                
+                Calculate: TOTAL = COMMONALITY + SPELLING + COMPATIBILITY
+        
+                Return ONLY a JSON object with this exact format:
+                {{"id": {playerId}, "score": TOTAL_SCORE}}
+                
+                Example: {{"id": 1, "score": 25}}
+                
+                """
+
+        result = self.prompt_template(llm, playerId=playerId, prompt=prompt, operationName="Word Combined Rating")
+
+        return result
 
     def check_spelling(self, llm, word: str) -> bool:
         """Check if word is spelled correctly"""
+        print("[✔] Checking Spelling...")
 
-        # Simple spelling check - you might want to implement a proper spell checker
-        return True  # Placeholder
+        prompt = f"""
+        Check if the word "{word}" is spelled correctly.
+
+        If the word IS NOT spelled correctly then return ONLY: false
+        If the word IS spelled correctly then return ONLY: true
+
+        Return only true or false in lowercase.
+        """
+
+        response = self.llm.invoke(prompt).content.strip()
+        final_response = response.split('</think>')[-1].strip().lower()
+
+        print(f"[✔] Spelling Checked: {final_response}")
+
+        # Convert string response to boolean
+        return final_response == 'true'
 
 
     def break_tie(self, llm, players_scores: List[Dict]) -> List[int]:
@@ -177,27 +258,28 @@ class Word_Assesment:
         return [score['id'] for score in players_scores]
 
 
-    def calculate_total_score(self, llm, words: Dict[int, str], prompt: str) -> List[Dict[str, Any]]:
-        """Calculate total scores for all players"""
+    def calculate_total_score_separately(self, llm, words: Dict[int, str], prompt: str) -> List[Dict[str, Any]]:
+        """Calculate total scores for all players but using separate functions to handle scoring"""
 
         print("Starting Calculation")
 
         playerScores = []
         for player_id, word in words.items():
             # Get commonality score
-            print(f"Getting commonality score for Player {player_id}: {word}")
+            print(f"[✔]  Getting commonality score for Player {player_id}: {word}")
             commonalityScore = self.score_word_commonality(llm, word, player_id)
 
             # Get Spelling Complexity Score
-            print(f"Getting Spelling Complexity score for Player {player_id}: {word}")
+            print(f"[✔]  Getting Spelling Complexity score for Player {player_id}: {word}")
             complexityScore = self.score_spelling_complexity(llm, word, player_id)
 
             # Get Prompt Combatability Score
-            print(f"Getting Prompt Compatability score for Player {player_id}: {word}")
+            print(f"[✔]  Getting Prompt Compatability score for Player {player_id}: {word}")
             combatabilityScore = self.score_prompt_compatibility(llm, word, prompt, player_id)
 
             # You can add other scoring components later
             totalScore = commonalityScore['score'] + complexityScore['score'] + combatabilityScore["score"]
+            print(f"[✔] Got {player_id} total score from answer - {word}")
 
             playerScores.append({
                 'id': player_id,
@@ -211,10 +293,45 @@ class Word_Assesment:
         return playerScores
 
 
+    def calculate_total_score_together(self, llm, words: Dict[int, str], prompt: str) -> List[Dict[str, Any]]:
+        """Calculate total scores for all players but using a single function to handle scoring"""
+
+        print("Starting Calculation")
+
+        playerScores = []
+        for player_id, word in words.items():
+
+            isSpellingCorrect = self.check_spelling(llm, word)
+            print(isSpellingCorrect)
+
+            wrongSpellingNegation = 0.0
+            if wrongSpellingNegation is False:
+                wrongSpellingNegation = 2.0
+
+            print(f"negation amount is {wrongSpellingNegation}")
+
+            # Get Prompt Combatability Score
+            print(f"[✔]  Getting Prompt Criteria Result score for Player {player_id}: {word}")
+            getCriteriaResult = self.score_combined_rating(llm, word, prompt, player_id)
+
+            # You can add other scoring components later
+            totalScore = getCriteriaResult["score"] - wrongSpellingNegation
+            print(f"[✔] Got {player_id} total score of {totalScore} from answer - {word}")
+
+            playerScores.append({
+                'id': player_id,
+                'word': word,
+                'criteriaResult': getCriteriaResult['score'],
+                'total': totalScore
+            })
+
+        return playerScores
+
+
     def generate_prompt(self, llm,  theme: str) -> str:
         """Generate a prompt covering a certain theme for the word game"""
 
-        print("Generating prompt...")
+        print("[✔] Generating prompt...")
 
         prompt = f"""
         Create a SINGLE, clear prompt for a word association game following the theme "{theme}". 
@@ -237,6 +354,8 @@ class Word_Assesment:
 
         response = self.llm.invoke(prompt).content.strip()
         finalResponse = response.split('</think>')[-1].strip()
+
+        print("[✔] Prompt Generated")
 
         return finalResponse
 
@@ -271,7 +390,8 @@ class Word_Assesment:
             print(f"Player {player_id}: {word}")
 
         print("\nScoring Players' Words")
-        playerScores = self.calculate_total_score(llm, words, prompt)
+        # playerScores = self.calculate_total_score_separately(llm, words, prompt)
+        playerScores = self.calculate_total_score_together(llm, words, prompt)
 
         # Sort players by total score (descending - higher score is better)
         playerScores.sort(key=lambda x: x['total'], reverse=True)
@@ -311,8 +431,8 @@ class Word_Assesment:
         for scoreData in playerScores:
             print(f"Player {scoreData['id']} ('{scoreData['word']}'): {scoreData['total']:.1f} points")
             print(f"\n  - Commonality: {scoreData['commonality']:.1f}/10")
-            print(f" - Spelling Complexity: {scoreData['complexity']:.1f}/10")
-            print(f" - Prompt Compatability: {scoreData['compatability']:.1f}/10\n")
+            print(f" - Spelling Complexity: {scoreData['complexity']:.1f}/7")
+            print(f" - Prompt Compatability: {scoreData['compatability']:.1f}/15\n")
 
         print(f"\nWinner(s): {', '.join(winners)}!")
 
@@ -325,24 +445,27 @@ class Word_Assesment:
         print("=" * 50)
 
 
-    def start_new_game(self, llm):
+    def start_new_game(self, llm, theme: str):
         """Start a new game with multiple players"""
 
         print("\n" + "*" * 40)
-        print("START NEW GAME")
+        print("[✔] START NEW GAME")
         print("*" * 40)
 
         # Get number of players
         player_count = self.get_player_count()
 
         # Generate Prompt
-        prompt = self.generate_prompt(llm, "")
+        prompt = self.generate_prompt(llm, theme)
         print(f"\nPrompt: {prompt}\n")
 
         # Get player inputs
         words = {}
         for i in range(1, player_count + 1):
-            words[i] = self.get_player_input(i)
+            words[i] = self.get_player_input(i).capitalize()
+
+        print(f"player {words}")
+        print("[✔] Got Player Input")
 
         # Evaluate words
         evaluation = self.evaluate_words(llm, prompt, words)
