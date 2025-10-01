@@ -1,141 +1,159 @@
-# LLM-Powered Word Association Game
+# The Notebook – AI Word Game
 
-A terminal-based multiplayer **word association game** powered by Large Language Models (LLMs).  
-Players compete by entering words that best fit a generated prompt. The LLM scores each word based on:
+An AI-powered word association game built with Ollama + Qwen3 (0.6B) as the reasoning model.
 
-- **Commonality**: How common the word is among elementary students (ages 7–11).  
-- **Spelling Complexity**: How difficult the word is to spell.  
-- **Prompt Compatibility**: How well the word matches the given prompt.  
+The backend handles scoring, prompt generation, and player word evaluation, while the frontend (React + Vite) will provide the UI/UX layer.
 
-The player with the **highest total score** wins!
 
----
-
-## Features
-- Multiplayer support (2–5 players).  
-- LLM-powered evaluation using [LangChain](https://www.langchain.com/) and [Ollama](https://ollama.ai/).  
-- Scoring based on **word commonality, spelling difficulty, and prompt fit**.  
-- Tie-breaking logic (customizable).  
-- Fun and educational for kids and learners.  
-
----
-
-## Requirements
-
-- Python **3.10+**
-- [Ollama](https://ollama.ai/) (must be installed and running)
-- Dependencies listed in `requirements.txt` (see installation below)
+~~~ bash
+project-root/
+│
+├── AI/                     # Backend (Python, Ollama, LangChain)
+│   ├── Word_Assesment.py   # Core game logic & word scoring
+│   ├── main.py             # CLI entry point for testing / playing in terminal
+│   ├── requirements.txt    # Python dependencies
+│   ├── .idea/              # IDE configs (ignore)
+│   └── __pycache__/        # Python cache (ignore)
+│
+├── frontend/               # React + Vite frontend (UI/UX)
+│   ├── src/                # React app source (empty for now)
+│   └── package.json        # Frontend dependencies
+│
+└── README.md               # Documentation
+~~~
 
 ---
 
-## Installation
+## AI Python
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/your-username/LLM-powered_word_association_game.git
-   cd LLM-powered_word_association_game
-   ```
-2. Create a virtual environment (recommended)
-  ```bash
-  python -m venv .venv
-  source .venv/bin/activate   
-  .venv\Scripts\activate      
-  ```
-3. Install dependencies
-  ```bash
-  pip install -r requirements.txt
-  ```
+*Dependencies*
 
-## Running the Game
-* Make sure Ollama is running and that the model you want (default: qwen3:0.6b) is available. *
+Install required Python packages:
 
-Then run:
+~~~bash
+cd AI
+pip install -r requirements.txt
+~~~
 
-```bash
+Your requirements.txt should contain at least:
+
+~~~bash
+langchain
+ollama
+~~~
+
+---
+
+## Running the AI in CLI
+
+You can test the AI game loop directly in the terminal:
+
+~~~bash
+cd AI
 python main.py
-```
+~~~
 
-You’ll see a menu:
+This will start the game where:
 
-```vbnet
-Welcome to The Notebook
+- This will start the game where:
+- Players input words.
+- Words are evaluated on:
+   - Commonality - how common the word is among 7–11-year-olds
+   - Spelling Complexity - difficulty of spelling
+   - Prompt Compatibility - how well the word matches the prompt
 
-Options:
-1. Start a new game
-2. Quit
-Choose 1 to start a new game, pick the number of players (2–5), and enter your words!
-```
-
-## Project Structure
-```bash
-Copy code
-.
-├── main.py              # Entry point for the game
-├── Word_Assesment.py    # Core game logic and scoring
-├── requirements.txt     # Python dependencies
-└── README.md            # Project documentation
-```
+Scores are calculated, and the winner is displayed.
 
 ---
 
-## Example Gameplay
-```yaml
-Welcome to The Notebook
+## Code Overview
+*`main.py`*
 
-Options:
-1. Start a new game
-2. Quit
+- Entry point for running the game.
+- Initializes the *LLM* with Ollama (qwen3:0.6b).
 
-Enter your choice: 1
-How many players? (2-5): 2
+*`Word_Assesment.py`*
 
-Prompt: "Something that shines in the sky at night."
+- Core logic for evaluating words.
 
-Player 1, enter a word: moon
-Player 2, enter a word: galaxy
+---
+---
+---
 
-Evaluating words...
-...
+## Frontend (React + Vite)
 
-GAME RESULTS
-Prompt: Something that shines in the sky at night.
+*Not yet implemented – placeholder for future development.*
 
-Scores:
-Player 1 ('moon'): 13.0 points
- - Commonality: 2.0/10
- - Spelling Complexity: 2.0/7
- - Prompt Compatibility: 9.0/15
+The frontend will:
+- Provide a web UI for multiple players.
+- Fetch AI results from the backend (via API).
+- Display game prompts, scores, and winners.
 
-Player 2 ('galaxy'): 25.0 points
- - Commonality: 8.0/10
- - Spelling Complexity: 3.0/7
- - Prompt Compatibility: 14.0/15
+Planned Workflow
+1. Players input words through React UI.
+2. Frontend sends words + prompt → backend API (to be created).
+3. Backend returns scores + winner(s).
+4. UI updates with live results.
 
-Winner(s): Player 2!
-'galaxy' (score: 25.0) is the least common word!
-```
+Tech Stack
+- React + Vite (frontend framework + fast bundler).
+- Express / FastAPI (planned backend API layer).
+- Ollama + LangChain (AI reasoning).
 
-## Customization
-- Model: Change the model in main.py:
+---
+---
+---
 
-```python
-CHAT_MODEL = "qwen3:0.6b"
-```
+## Quick Start for Devs
 
-- Themes: Change the theme passed to start_new_game:
-```python
-Word_Assesment(llm).start_new_game(llm, theme="space")
-```
+1. Run Ollama with Qwen3:
+   ~~~bash
+   ollama run qwen3:0.6b
+   ~~~
+2. Start backend test:
+   ~~~bash
+   cd AI
+   python main.py
+   ~~~
+3. Prepare frontend:
+   ~~~bash
+   cd frontend
+   npm install
+   npm run dev
+   ~~~
 
-- Scoring: Adjust logic in Word_Assesment.py.
-
+---
+---
 ---
 
 ### License
-MIT License – feel free to use and modify.
 
-### Future Ideas
-- Web or GUI version
-- Persistent leaderboard
-- Advanced tie-breaking
-- More scoring dimensions (e.g., creativity)
+This project is licensed under the MIT License – a very permissive license that allows reuse, modification, distribution, and private/commercial use of the software.
+
+### Permissions
+- Modification
+- Distribution
+- Private use
+
+### Conditions
+- You must include the original copyright notice and license text in all copies or substantial portions of the software.
+- No liability or warranty is provided by the authors.
+
+### Disclaimer
+~~~pgqsql
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
+PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT 
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+~~~
+
+### Example Notice
+
+If you reuse or modify this project, include the following notice in your version:
+
+~~~python
+Copyright (c) 2025 [Your Name or Organization]
+Licensed under the MIT License. See LICENSE file for details.
+~~~
