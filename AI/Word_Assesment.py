@@ -165,6 +165,8 @@ class Word_Assesment:
 
 
     def score_combined_rating(self, llm, word: str, playerId: int, prompt: str) -> Dict[str, Any]:
+        print(f"[✔]  Generating Promp Scoring Criteria")
+
         prompt = f"""
                 PROMPT: "{prompt}"
                 WORD TO EVALUATE: "{word}"
@@ -257,6 +259,8 @@ class Word_Assesment:
                 """
 
         result = self.prompt_template(llm, playerId=playerId, prompt=prompt, operationName="Word Combined Rating")
+        
+        print(f"[✔]  Scoring Completed")
 
         return result
 
@@ -313,6 +317,7 @@ class Word_Assesment:
         return playerScores
 
 
+    ### Main Scoring System
     def calculate_total_score_together(self, llm, words: Dict[int, str], prompt: str) -> List[Dict[str, Any]]:
         """Calculate total scores for all players but using a single function to handle scoring"""
 
@@ -467,6 +472,7 @@ class Word_Assesment:
         player_count = self.get_player_count()
 
         # Generate Prompt
+        print(print(f"\nPrompt: Starting Prompt Generation\n"))
         prompt = self.generate_prompt(llm, theme)
         print(f"\nPrompt: {prompt}\n")
 
