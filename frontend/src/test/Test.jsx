@@ -8,7 +8,7 @@ const Test = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const API_BASE_URL = 'http://localhost:5000'; // Your Flask API URL
+  const API_BASE_URL = process.env.API_BASE_URL; // Flask API URL
 
   const handlePlayerCountChange = (e) => {
     setPlayerCount(parseInt(e.target.value, 10));
@@ -159,13 +159,9 @@ const Test = () => {
                     <strong>Player {scoreData.id} ('{scoreData.word}'):</strong>{' '}
                     {scoreData.total.toFixed(1)} points
                   </p>
-                  {/* You can display more detailed scores here if needed,
-                      based on whether you use separate or combined scoring in backend.
-                      For combined scoring, `criteriaResult` is the main score. */}
-                      {/* Example for combined scoring: */}
-                      {scoreData.criteriaResult && (
-                         <p className="detail-score">  - Criteria Result: {scoreData.criteriaResult.toFixed(1)}</p>
-                      )}
+                  {scoreData.criteriaResult && (
+                    <p className="detail-score">  - Criteria Result: {scoreData.criteriaResult.toFixed(1)}</p>
+                  )}
                 </div>
               ))}
               <h3>Winner(s): {evaluationResult.winners.join(', ')}!</h3>
