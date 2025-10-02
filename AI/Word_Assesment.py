@@ -10,6 +10,7 @@ class Word_Assesment:
     def __init__(self, llm):
         self.llm = llm
 
+
     def clean_json_response(self, response: str) -> str:
         """Clean JSON response by removing markdown code blocks and extra text"""
         # Remove ```json and ``` markers
@@ -141,7 +142,31 @@ class Word_Assesment:
         return result
 
 
+    def check_spelling(self, llm, word: str) -> bool:
+        """Check if word is spelled correctly"""
+        print("[✔] Checking Spelling...")
+
+        prompt = f"""
+        Check if the word "{word}" is spelled correctly.
+
+        If the word IS NOT spelled correctly then return ONLY: false
+        If the word IS spelled correctly then return ONLY: true
+
+        Return only true or false in lowercase.
+        """
+
+        response = self.llm.invoke(prompt).content.strip()
+        final_response = response.split('</think>')[-1].strip().lower()
+
+        print(f"[✔] Spelling Checked: {final_response}")
+
+        # Convert string response to boolean
+        return final_response == 'true'
+
+
     def score_combined_rating(self, llm, word: str, playerId: int, prompt: str) -> Dict[str, Any]:
+        print(f"[✔]  Generating Promp Scoring Criteria")
+
         prompt = f"""
                 PROMPT: "{prompt}"
                 WORD TO EVALUATE: "{word}"
@@ -213,10 +238,18 @@ class Word_Assesment:
                 Higher scores mean the word is very closely related to the prompt.
                 
                 Assign the rating as compatability_score.
+
+
+                Getting Spelling Correction score:
+                Check if the word "{word}" is spelled correctly.
+
+                If the word IS NOT spelled correctly then set the Spelling Correction score = 2
+                If the word IS spelled correctly then set the Spelling Correction score = 0
                 
-                
-                
-                Calculate: TOTAL = COMMONALITY + SPELLING + COMPATIBILITY
+
+
+
+                Calculate: TOTAL = COMMONALITY + SPELLING + COMPATIBILITY - (Spelling Correction score)
         
                 Return ONLY a JSON object with this exact format:
                 {{"id": {playerId}, "score": TOTAL_SCORE}}
@@ -226,29 +259,10 @@ class Word_Assesment:
                 """
 
         result = self.prompt_template(llm, playerId=playerId, prompt=prompt, operationName="Word Combined Rating")
+        
+        print(f"[✔]  Scoring Completed")
 
         return result
-
-    def check_spelling(self, llm, word: str) -> bool:
-        """Check if word is spelled correctly"""
-        print("[✔] Checking Spelling...")
-
-        prompt = f"""
-        Check if the word "{word}" is spelled correctly.
-
-        If the word IS NOT spelled correctly then return ONLY: false
-        If the word IS spelled correctly then return ONLY: true
-
-        Return only true or false in lowercase.
-        """
-
-        response = self.llm.invoke(prompt).content.strip()
-        final_response = response.split('</think>')[-1].strip().lower()
-
-        print(f"[✔] Spelling Checked: {final_response}")
-
-        # Convert string response to boolean
-        return final_response == 'true'
 
 
     def break_tie(self, llm, players_scores: List[Dict]) -> List[int]:
@@ -265,6 +279,16 @@ class Word_Assesment:
 
         playerScores = []
         for player_id, word in words.items():
+
+            isSpellingCorrect = self.check_spelling(llm, word)
+            print(isSpellingCorrect)
+
+            wrongSpellingNegation = 0.0
+            if wrongSpellingNegation is False:
+                wrongSpellingNegation = 2.0
+
+            print(f"negation amount is {wrongSpellingNegation}")
+
             # Get commonality score
             print(f"[✔]  Getting commonality score for Player {player_id}: {word}")
             commonalityScore = self.score_word_commonality(llm, word, player_id)
@@ -278,7 +302,7 @@ class Word_Assesment:
             combatabilityScore = self.score_prompt_compatibility(llm, word, prompt, player_id)
 
             # You can add other scoring components later
-            totalScore = commonalityScore['score'] + complexityScore['score'] + combatabilityScore["score"]
+            totalScore = commonalityScore['score'] + complexityScore['score'] + combatabilityScore["score"] - wrongSpellingNegation
             print(f"[✔] Got {player_id} total score from answer - {word}")
 
             playerScores.append({
@@ -293,6 +317,7 @@ class Word_Assesment:
         return playerScores
 
 
+    ### Main Scoring System
     def calculate_total_score_together(self, llm, words: Dict[int, str], prompt: str) -> List[Dict[str, Any]]:
         """Calculate total scores for all players but using a single function to handle scoring"""
 
@@ -301,21 +326,12 @@ class Word_Assesment:
         playerScores = []
         for player_id, word in words.items():
 
-            isSpellingCorrect = self.check_spelling(llm, word)
-            print(isSpellingCorrect)
-
-            wrongSpellingNegation = 0.0
-            if wrongSpellingNegation is False:
-                wrongSpellingNegation = 2.0
-
-            print(f"negation amount is {wrongSpellingNegation}")
-
             # Get Prompt Combatability Score
             print(f"[✔]  Getting Prompt Criteria Result score for Player {player_id}: {word}")
             getCriteriaResult = self.score_combined_rating(llm, word, prompt, player_id)
 
             # You can add other scoring components later
-            totalScore = getCriteriaResult["score"] - wrongSpellingNegation
+            totalScore = getCriteriaResult["score"]
             print(f"[✔] Got {player_id} total score of {totalScore} from answer - {word}")
 
             playerScores.append({
@@ -456,6 +472,7 @@ class Word_Assesment:
         player_count = self.get_player_count()
 
         # Generate Prompt
+        print(print(f"\nPrompt: Starting Prompt Generation\n"))
         prompt = self.generate_prompt(llm, theme)
         print(f"\nPrompt: {prompt}\n")
 
